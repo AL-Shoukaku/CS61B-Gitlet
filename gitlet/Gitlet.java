@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import static gitlet.Utils.join;
+import static gitlet.Utils.serialize;
 
 public class Gitlet {
     private Repository rep;
@@ -24,23 +25,17 @@ public class Gitlet {
         Repository.dirInit();   // 初始化目录
         // 建立第一个 commit 和 master 分支
         Commit commit = new Commit("initial commit", null, null, new Date(0));
-        String commitSHA1 = Utils.sha1(commit);
+        String commitSHA1 = Utils.sha1((Object) Utils.serialize(commit));
         Branch branch = new Branch("master");
         branch.setCommit(commitSHA1);
-        String branchSHA1 = Utils.sha1(branch);
-        try {
-            join(Repository.COMMITS_DIR, commitSHA1).createNewFile();
-            Utils.writeObject(join(Repository.COMMITS_DIR, commitSHA1), commit);
-            join(Repository.BRANCHES_DIR, branchSHA1).createNewFile();
-            Utils.writeObject(join(Repository.BRANCHES_DIR, branchSHA1), branch);
-        } catch (IOException e) {
-            throw new GitletException("init: make new file error!");
-        }
+        String branchSHA1 = Utils.sha1((Object) Utils.serialize(branch));
+        Repository.writeBranch(branch, branchSHA1);
+        Repository.writeCommit(commit, commitSHA1);
         // 设置好 head 指针
         Head head = new Head();
         head.setBranch(branchSHA1);
         head.setCommit(commitSHA1);
-        Utils.writeObject(Repository.HEAD, head);
+        Repository.writeHead(head);
     }
 
     private static void errorOperands() {
