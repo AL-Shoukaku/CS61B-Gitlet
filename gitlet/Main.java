@@ -24,9 +24,11 @@ public class Main {
                 Gitlet.init(args);
                 break;
             case "add":
-                // TODO: handle the `add [filename]` command
+                Gitlet.add(args);
                 break;
-            // TODO: FILL THE REST IN
+            case "commit":
+                Gitlet.commit(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

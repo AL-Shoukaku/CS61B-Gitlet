@@ -2,6 +2,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+
 import static gitlet.Utils.*;
 
 /** 代表 .gitlet 仓库
@@ -128,5 +130,28 @@ public class Repository {
             }
         }
         writeObject(file, blob);
+    }
+
+    /** 判断给定blob是否与当前commit中的内容完全一样 */
+    public static boolean BlobEqualToCurCommit(String filename, Blob blob) {
+        if (!getCurrentCommit().hasFile(filename)) {
+            return false;
+        }
+        byte[] b1 = blob.getFileContents();
+        byte[] b2 = getCurrentCommit().getBlob(filename).getFileContents();
+        return Arrays.equals(b1, b2);
+    }
+
+    /** 拿到当前commit */
+    public static Commit getCurrentCommit() {
+        return getCommit(getHead().getCommit());
+    }
+
+    /** 删除一个 blob */
+    public static void deleteBlob(String sha1) {
+        File file = join(BLOBS_DIR, sha1);
+        if (file.exists()) {
+            file.delete();
+        }
     }
 }

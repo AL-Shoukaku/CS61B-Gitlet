@@ -32,4 +32,21 @@ public class Stage implements Serializable {
     public HashSet<String> getRemoveFile() {
         return removeFile;
     }
+
+    public boolean hasStage(String filename) {
+        return addFile.containsKey(filename);
+    }
+
+    public boolean hasRemove(String filename) {
+        return removeFile.contains(filename);
+    }
+
+    public void removeStage(String name) {
+        Repository.deleteBlob(addFile.get(name));
+        addFile.remove(name);
+    }
+
+    public void deleteRemove(String name) {
+        removeFile.remove(name);
+    }
 }

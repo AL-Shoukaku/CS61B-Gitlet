@@ -47,4 +47,15 @@ public class Commit implements Serializable {
     public void setSecondParent(String parent) {
         this.secondParent = parent;
     }
+
+    public boolean hasFile(String filename) {
+        return blobs.containsKey(filename);
+    }
+
+    public Blob getBlob(String name) {
+        if (!blobs.containsKey(name)) {
+            return null;
+        }
+        return Repository.getBlob(blobs.get(name));
+    }
 }
