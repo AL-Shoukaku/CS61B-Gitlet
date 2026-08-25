@@ -1,11 +1,6 @@
 package gitlet;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Date;
-
-import static gitlet.Utils.join;
-import static gitlet.Utils.serialize;
 
 public class Gitlet {
     private Repository rep;
@@ -36,6 +31,8 @@ public class Gitlet {
         head.setBranch(branchSHA1);
         head.setCommit(commitSHA1);
         Repository.writeHead(head);
+        // 建立空的暂存区
+        Repository.writeStage(new Stage());
     }
 
     private static void errorOperands() {

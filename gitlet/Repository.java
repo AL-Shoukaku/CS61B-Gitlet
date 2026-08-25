@@ -2,12 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-
 import static gitlet.Utils.*;
-
-// TODO: any imports you need here
 
 /** 代表 .gitlet 仓库
  *  封装对于仓库文件的操作，对外提供操作仓库的静态方法
@@ -29,6 +24,7 @@ public class Repository {
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
     public static final File BRANCHES_DIR = join(GITLET_DIR, "branches");
     public static final File HEAD = join(GITLET_DIR, "head");
+    public static final File STAGE = join(GITLET_DIR, "stage");
 
     public Repository() {
         // 待补充
@@ -42,8 +38,9 @@ public class Repository {
         BRANCHES_DIR.mkdir();
         try {
             HEAD.createNewFile();
+            STAGE.createNewFile();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new GitletException("dirInit error!\n");
         }
     }
 
@@ -55,6 +52,16 @@ public class Repository {
     /** 写头指针 */
     public static void writeHead(Head head) {
         writeObject(HEAD, head);
+    }
+
+    /** 获取暂存区 */
+    public static Stage getStage() {
+        return readObject(STAGE, Stage.class);
+    }
+
+    /** 写入暂存区 */
+    public static void writeStage(Stage stage) {
+        writeObject(STAGE, stage);
     }
 
     /** 获取指定 commit */
