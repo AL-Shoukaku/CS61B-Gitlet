@@ -19,7 +19,7 @@ public class Main {
             System.exit(0);
         }
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
                 Gitlet.init(args);
                 break;
@@ -52,6 +52,9 @@ public class Main {
                 break;
             case "rm-branch":
                 Gitlet.rmbranch(args);
+                break;
+            case "reset":
+                Gitlet.reset(args);
                 break;
             default:
                 System.out.println("No command with that name exists.");

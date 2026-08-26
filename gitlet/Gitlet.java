@@ -18,7 +18,8 @@ public class Gitlet {
             errorOperands();
         }
         if (Repository.GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in thecurrent directory.");
+            System.out.println("A Gitlet version-control system already exists in "
+                    + "thecurrent directory.");
             return;
         }
         Repository.dirInit();   // 初始化目录
@@ -54,11 +55,14 @@ public class Gitlet {
         // 如果已经暂存，则先删除，如果在已删除中，则取消
         if (stage.hasStage(name)) {
             stage.removeStage(name);    //已经暂存，先删除等待重写
-        } else if (stage.hasRemove(name)) {
+        }
+        if (stage.hasRemove(name)) {
             stage.deleteRemove(name);
         }
-        // 如果文件在当前提交中，并且内容一致，则不写入blob
-        if (Repository.getCurrentCommit().hasFile(name) && Repository.blobEqualCurrentCommit(name, blob)) {
+        // 如果文件在当前提交中，并且内容一致，则不写入blob,只更新暂存区
+        if (Repository.getCurrentCommit().hasFile(name)
+                && Repository.blobEqualCurrentCommit(name, blob)) {
+            Repository.writeStage(stage);
             return;
         }
         stage.addFile(name, Utils.sha1(Utils.serialize(blob)));
@@ -241,7 +245,8 @@ public class Gitlet {
                     System.out.println(filename);
                 }
             } else if (curCommit.hasFile(filename)) {
-                if (!Arrays.equals(Utils.readContents(file), curCommit.getBlob(filename).getFileContents())) {
+                if (!Arrays.equals(Utils.readContents(file),
+                        curCommit.getBlob(filename).getFileContents())) {
                     System.out.println(filename);
                 }
             } else {
@@ -303,8 +308,8 @@ public class Gitlet {
         List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
         for (String name : newCommit.getBlobs().keySet()) {
             if (!curCommit.hasFile(name) && workList.contains(name)) {
-                System.out.println("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 return;
             }
         }
@@ -314,7 +319,8 @@ public class Gitlet {
             Repository.deleteFile(name);
         }
         for (Map.Entry<String, String> entry : newCommit.getBlobs().entrySet()) {
-            Repository.writeFile(entry.getKey(), Repository.getBlob(entry.getValue()).getFileContents());
+            Repository.writeFile(entry.getKey(),
+                    Repository.getBlob(entry.getValue()).getFileContents());
         }
         Head head = Repository.getHead();
         head.setCommit(Utils.sha1(Utils.serialize(newCommit)));
@@ -348,10 +354,44 @@ public class Gitlet {
             return;
         }
         if (branchName.equals(Repository.getHead().getBranch())) {
-            System.out.println("A branch with that name does notexist.");
+            System.out.println("Cannot remove the current branch.");
             return;
         }
         Repository.deleteBranch(branchName);
+    }
+
+    public static void reset(String[] args) {
+        if (args.length != 2) {
+            errorOperands();
+        }
+        String commitId = args[1];
+        Commit newCommit = Repository.getCommit(commitId);
+        Commit curCommit = Repository.getCurrentCommit();
+        Head head = Repository.getHead();
+        Branch branch = Repository.getBranch(head.getBranch());
+        if (newCommit == null) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
+        for (String name : newCommit.getBlobs().keySet()) {
+            if (!curCommit.hasFile(name) && workList.contains(name)) {
+                System.out.println("There is an untracked file in the way; delete it, "
+                        + "or add and commit it first.");
+                return;
+            }
+        }
+        for (String name : curCommit.getBlobs().keySet()) {
+            Repository.deleteFile(name);
+        }
+        for (String name : newCommit.getBlobs().keySet()) {
+            checkoutFileCommit(name, commitId);
+        }
+        Repository.clearStage();
+        head.setCommit(commitId);
+        branch.setCommit(commitId);
+        Repository.writeHead(head);
+        Repository.writeBranch(branch);
     }
 
     private static void errorOperands() {
