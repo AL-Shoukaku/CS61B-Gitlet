@@ -38,6 +38,9 @@ public class Main {
             case "global-log":
                 Gitlet.globalLog(args);
                 break;
+            case "find":
+                Gitlet.find(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

@@ -178,6 +178,25 @@ public class Gitlet {
         }
     }
 
+    public static void find(String[] args) {
+        if (args.length != 2) {
+            errorOperands();
+        }
+        String message = args[1];
+        List<String> nameList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
+        boolean hasCommit = false;
+        for (String filename : nameList) {
+            Commit commit = Repository.getCommit(filename);
+            if (commit.getMessage().contains(message)) {
+                System.out.println(Utils.sha1(Utils.serialize(commit)));
+                hasCommit = true;
+            }
+        }
+        if (!hasCommit) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
