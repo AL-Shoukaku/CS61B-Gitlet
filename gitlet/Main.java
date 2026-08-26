@@ -41,6 +41,9 @@ public class Main {
             case "find":
                 Gitlet.find(args);
                 break;
+            case "status":
+                Gitlet.status(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

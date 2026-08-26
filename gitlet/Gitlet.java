@@ -197,6 +197,64 @@ public class Gitlet {
         }
     }
 
+    public static void status(String[] args) {
+        if (args.length != 1) {
+            errorOperands();
+        }
+        // 准备所需要的对象
+        Head head = Repository.getHead();
+        Stage stage = Repository.getStage();
+        Commit curCommit = Repository.getCurrentCommit();
+        List<String> branchList = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        branchList.sort(Comparator.naturalOrder());
+        TreeMap<String, String> stageMap = new TreeMap<>(stage.getAddFile());   //treemap自动排序
+        List<String> removeList = (new ArrayList<>(stage.getRemoveFile()));
+        removeList.sort(Comparator.naturalOrder());
+        List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
+        workList.sort(Comparator.naturalOrder());
+        List<String> untrackList = new ArrayList<>();
+        System.out.println("=== Branches ===");
+        for (String branch : branchList) {
+            if (branch.equals(head.getBranch())) {
+                System.out.print("*");
+            }
+            System.out.println(branch);
+        }
+        System.out.println("\n=== Staged Files ===");
+        for (String name : stageMap.keySet()) {
+            System.out.println(name);
+        }
+        System.out.println("\n=== Removed Files ===");
+        for (String name : removeList) {
+            System.out.println(name);
+        }
+        System.out.println("\n=== Modifications Not Staged For Commit ===");
+        for (String filename : workList) {
+            File file = join(Repository.CWD, filename);
+            if (file.isDirectory()) {
+                continue;
+            }
+            // 已经暂存,未暂存但在当前commit中,未跟踪
+            if (stage.hasStage(filename)) {
+                File stageFile = join(Repository.BLOBS_DIR, stageMap.get(filename));
+                if (!Arrays.equals(Utils.readContents(file), Utils.readObject(stageFile, Blob.class).getFileContents())) {
+                    System.out.println(filename);
+                }
+            } else if (curCommit.hasFile(filename)) {
+                if (!Arrays.equals(Utils.readContents(file), curCommit.getBlob(filename).getFileContents())) {
+                    System.out.println(filename);
+                }
+            } else {
+                untrackList.add(filename);
+            }
+        }
+        System.out.println("\n=== Untracked Files ===");
+        for (String filename : untrackList) {
+            System.out.println(filename);
+        }
+        System.out.println();
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
