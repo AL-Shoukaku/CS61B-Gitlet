@@ -178,4 +178,12 @@ public class Repository {
         }
         Utils.writeContents(file, contents);
     }
+
+    /** 删除指定分支 */
+    public static void deleteBranch(String branchName) {
+        File file = join(BRANCHES_DIR, branchName);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
 }

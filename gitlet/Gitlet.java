@@ -294,11 +294,35 @@ public class Gitlet {
     }
 
     public static void branch(String[] args) {
-
+        if (args.length != 2) {
+            errorOperands();
+        }
+        String branchName = args[1];
+        List<String> allBranch = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        if (allBranch.contains(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        Branch branch = new Branch(branchName);
+        branch.setCommit(Repository.getHead().getCommit());
+        Repository.writeBranch(branch);
     }
 
     public static void rmbranch(String[] args) {
-
+        if (args.length != 2) {
+            errorOperands();
+        }
+        String branchName = args[1];
+        Branch branch = Repository.getBranch(branchName);
+        if (branch == null) {
+            System.out.println("A branch with that name does notexist.");
+            return;
+        }
+        if (branchName.equals(Repository.getHead().getBranch())) {
+            System.out.println("A branch with that name does notexist.");
+            return;
+        }
+        Repository.deleteBranch(branchName);
     }
 
     private static void errorOperands() {
