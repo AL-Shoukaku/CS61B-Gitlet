@@ -2,10 +2,13 @@ package gitlet;
 
 // TODO: any imports you need here
 
+import com.sun.source.tree.Tree;
+
 import java.io.Serializable;
 import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -26,7 +29,7 @@ public class Commit implements Serializable {
     private final String message;
     private final String firstParent;
     private final String secondParent;
-    private HashMap<String, String> blobs;  // <name, blob>
+    private TreeMap<String, String> blobs;  // <name, blob>
     private final Date date;
 
     public Commit(String message, String first, String second, Date date) {
@@ -34,7 +37,7 @@ public class Commit implements Serializable {
         this.date = date;
         this.firstParent = first;
         this.secondParent = second;
-        this.blobs = new HashMap<>();
+        this.blobs = new TreeMap<>();
     }
 
     public String getFirstParent() {
@@ -71,7 +74,7 @@ public class Commit implements Serializable {
     }
 
     /** 获取整个 blobs */
-    public HashMap<String, String> getBlobs() {
+    public TreeMap<String, String> getBlobs() {
         return blobs;
     }
 }

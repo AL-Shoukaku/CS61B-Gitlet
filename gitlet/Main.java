@@ -44,6 +44,9 @@ public class Main {
             case "status":
                 Gitlet.status(args);
                 break;
+            case "checkout":
+                Gitlet.checkout(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

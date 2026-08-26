@@ -255,6 +255,44 @@ public class Gitlet {
         System.out.println();
     }
 
+    public static void checkout(String[] args) {
+        if (args.length == 3 && args[1].equals("--")) {
+            checkoutFile(args[2]);
+        } else if (args.length == 4 && args[2].equals("--")) {
+            checkoutFileCommit(args[3], args[1]);
+        } else if (args.length == 2) {
+            checkoutBranch(args[1]);
+        } else {
+            errorOperands();
+        }
+    }
+
+    private static void checkoutFile(String filename) {
+        Commit curCommit = Repository.getCurrentCommit();
+        if (!curCommit.hasFile(filename)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        Repository.writeFile(filename, (Object) curCommit.getBlob(filename).getFileContents());
+    }
+
+    private static void checkoutFileCommit(String filename,String commitId) {
+        Commit commit = Repository.getCommit(commitId);
+        if (commit == null) {
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        if (!commit.hasFile(filename)) {
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        Repository.writeFile(filename, (Object) commit.getBlob(filename).getFileContents());
+    }
+
+    private static void checkoutBranch(String branchName) {
+
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);

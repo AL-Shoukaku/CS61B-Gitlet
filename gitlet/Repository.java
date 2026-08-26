@@ -167,4 +167,17 @@ public class Repository {
             file.delete();
         }
     }
+
+    /** 根据 filename 写入当前目录中的文件 */
+    public static void writeFile(String filename, Object... contents) {
+        File file = join(CWD, filename);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Utils.writeContents(file, contents);
+    }
 }
