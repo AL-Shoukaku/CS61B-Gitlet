@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.join;
-import static gitlet.Utils.readContentsAsString;
 
 public class Gitlet {
     private Repository rep;
@@ -59,7 +58,7 @@ public class Gitlet {
             stage.deleteRemove(name);
         }
         // 如果文件在当前提交中，并且内容一致，则不写入blob
-        if (Repository.getCurrentCommit().hasFile(name) && Repository.BlobEqualToCurCommit(name, blob)) {
+        if (Repository.getCurrentCommit().hasFile(name) && Repository.blobEqualCurrentCommit(name, blob)) {
             return;
         }
         stage.addFile(name, Utils.sha1(Utils.serialize(blob)));
@@ -83,7 +82,7 @@ public class Gitlet {
         }
         Commit curCommit = Repository.getCurrentCommit();
         Head head = Repository.getHead();
-        Branch branch = branch = Repository.getBranch(head.getBranch());
+        Branch branch = Repository.getBranch(head.getBranch());
         Commit commit = new Commit(message, head.getCommit(), null, new Date());
         // 先遍历当前 commit，不在 stage 中的文件一律加入新 commit
         for (Map.Entry<String, String> entry : curCommit.getBlobs().entrySet()) {
@@ -237,7 +236,8 @@ public class Gitlet {
             // 已经暂存,未暂存但在当前commit中,未跟踪
             if (stage.hasStage(filename)) {
                 File stageFile = join(Repository.BLOBS_DIR, stageMap.get(filename));
-                if (!Arrays.equals(Utils.readContents(file), Utils.readObject(stageFile, Blob.class).getFileContents())) {
+                if (!Arrays.equals(Utils.readContents(file),
+                        Utils.readObject(stageFile, Blob.class).getFileContents())) {
                     System.out.println(filename);
                 }
             } else if (curCommit.hasFile(filename)) {
@@ -276,7 +276,7 @@ public class Gitlet {
         Repository.writeFile(filename, (Object) curCommit.getBlob(filename).getFileContents());
     }
 
-    private static void checkoutFileCommit(String filename,String commitId) {
+    private static void checkoutFileCommit(String filename, String commitId) {
         Commit commit = Repository.getCommit(commitId);
         if (commit == null) {
             System.out.println("No commit with that id exists.");
@@ -290,6 +290,14 @@ public class Gitlet {
     }
 
     private static void checkoutBranch(String branchName) {
+
+    }
+
+    public static void branch(String[] args) {
+
+    }
+
+    public static void rmbranch(String[] args) {
 
     }
 

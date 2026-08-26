@@ -47,6 +47,12 @@ public class Main {
             case "checkout":
                 Gitlet.checkout(args);
                 break;
+            case "branch":
+                Gitlet.branch(args);
+                break;
+            case "rm-branch":
+                Gitlet.rmbranch(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

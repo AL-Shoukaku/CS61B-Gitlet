@@ -12,8 +12,6 @@ import static gitlet.Utils.*;
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
-     *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
      * variable is used. We've provided two examples for you.
@@ -133,7 +131,7 @@ public class Repository {
     }
 
     /** 判断给定blob是否与当前commit中的内容完全一样 */
-    public static boolean BlobEqualToCurCommit(String filename, Blob blob) {
+    public static boolean blobEqualCurrentCommit(String filename, Blob blob) {
         if (!getCurrentCommit().hasFile(filename)) {
             return false;
         }
