@@ -67,8 +67,8 @@ public class Repository {
     }
 
     /** 获取指定 commit */
-    public static Commit getCommit(String name) {
-        File file = join(COMMITS_DIR, name);
+    public static Commit getCommit(String sha1) {
+        File file = join(COMMITS_DIR, sha1);
         if (!file.exists()) {
             return null;
         }
@@ -76,8 +76,8 @@ public class Repository {
     }
 
     /** 写入一个 commit */
-    public static void writeCommit(Commit commit, String name) {
-        File file = join(COMMITS_DIR, name);
+    public static void writeCommit(Commit commit, String sha1) {
+        File file = join(COMMITS_DIR, sha1);
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -98,8 +98,8 @@ public class Repository {
     }
 
     /** 写入 branch */
-    public static void writeBranch(Branch branch, String name) {
-        File file = join(BRANCHES_DIR, name);
+    public static void writeBranch(Branch branch) {
+        File file = join(BRANCHES_DIR, branch.getName());
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -111,8 +111,8 @@ public class Repository {
     }
 
     /** 获取指定 blob */
-    public static Blob getBlob(String name) {
-        File file = join(BLOBS_DIR, name);
+    public static Blob getBlob(String sha1) {
+        File file = join(BLOBS_DIR, sha1);
         if (!file.exists()) {
             return null;
         }
@@ -120,8 +120,8 @@ public class Repository {
     }
 
     /** 写入指定 blob */
-    public static void writeBlob(Blob blob, String name) {
-        File file = join(BLOBS_DIR, name);
+    public static void writeBlob(Blob blob, String sha1) {
+        File file = join(BLOBS_DIR, sha1);
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -153,5 +153,10 @@ public class Repository {
         if (file.exists()) {
             file.delete();
         }
+    }
+
+    /** 清空暂存区 */
+    public static void clearStage() {
+        writeStage(new Stage());
     }
 }

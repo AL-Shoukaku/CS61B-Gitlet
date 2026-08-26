@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.util.Date;
+import java.util.Map;
 
 import static gitlet.Utils.join;
 import static gitlet.Utils.readContentsAsString;
@@ -27,12 +28,11 @@ public class Gitlet {
         String commitSHA1 = Utils.sha1((Object) Utils.serialize(commit));
         Branch branch = new Branch("master");
         branch.setCommit(commitSHA1);
-        String branchSHA1 = Utils.sha1((Object) Utils.serialize(branch));
-        Repository.writeBranch(branch, branchSHA1);
+        Repository.writeBranch(branch);
         Repository.writeCommit(commit, commitSHA1);
         // 设置好 head 指针
         Head head = new Head();
-        head.setBranch(branchSHA1);
+        head.setBranch(branch.getName());
         head.setCommit(commitSHA1);
         Repository.writeHead(head);
         // 建立空的暂存区
@@ -70,6 +70,40 @@ public class Gitlet {
         if (args.length != 2) {
             errorOperands();
         }
+        Stage stage = Repository.getStage();
+        if (stage.isEmpty()) {
+            System.out.println("Nochanges added to the commit.");
+            return;
+        }
+        String message = args[1];
+        if (message.isEmpty()) {
+            System.out.println("Please entera commit message.");
+            return;
+        }
+        Commit curCommit = Repository.getCurrentCommit();
+        Head head = Repository.getHead();
+        Branch branch = branch = Repository.getBranch(head.getBranch());
+        Commit commit = new Commit(message, head.getCommit(), null, new Date());
+        // 先遍历当前 commit，不在 stage 中的文件一律加入新 commit
+        for (Map.Entry<String, String> entry : curCommit.getBlobs().entrySet()) {
+            if (!stage.hasStage(entry.getKey()) && !stage.hasRemove(entry.getKey())) {
+                commit.addBlob(entry.getKey(), entry.getValue());
+            }
+        }
+        // 然后将 stage 的暂存文件放入新 commit
+        commit.getBlobs().putAll(stage.getAddFile());
+        // 接下来写入 commit 到 .gitlet ，然后设置好 head 和 branch 并写回，最后清空暂存区
+        String commitSha1 = Utils.sha1(Utils.serialize(commit));
+        Repository.writeCommit(commit, commitSha1);
+        head.setCommit(commitSha1);
+        branch.setCommit(commitSha1);
+        Repository.writeHead(head);
+        Repository.writeBranch(branch);
+        Repository.clearStage();
+    }
+
+    public static void rm(String[] args) {
+
     }
 
     private static void errorOperands() {

@@ -29,6 +29,9 @@ public class Main {
             case "commit":
                 Gitlet.commit(args);
                 break;
+            case "rm":
+                Gitlet.rm(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

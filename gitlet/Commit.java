@@ -29,9 +29,6 @@ public class Commit implements Serializable {
     private HashMap<String, String> blobs;  // <name, blob>
     private final Date date;
 
-
-    /* TODO: fill in the rest of this class. */
-
     public Commit(String message, String first, String second, Date date) {
         this.message = message;
         this.date = date;
@@ -48,14 +45,25 @@ public class Commit implements Serializable {
         this.secondParent = parent;
     }
 
+    public void addBlob(String filename, String sha1) {
+        this.blobs.put(filename, sha1);
+    }
+
+    /** 根据文件名判断是否在改 commit 中 */
     public boolean hasFile(String filename) {
         return blobs.containsKey(filename);
     }
 
-    public Blob getBlob(String name) {
-        if (!blobs.containsKey(name)) {
+    /** 根据文件名获取对应的 blob */
+    public Blob getBlob(String filename) {
+        if (!blobs.containsKey(filename)) {
             return null;
         }
-        return Repository.getBlob(blobs.get(name));
+        return Repository.getBlob(blobs.get(filename));
+    }
+
+    /** 获取整个 blobs */
+    public HashMap<String, String> getBlobs() {
+        return blobs;
     }
 }

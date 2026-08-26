@@ -33,20 +33,29 @@ public class Stage implements Serializable {
         return removeFile;
     }
 
+    /** 缓存区是否有该文件 */
     public boolean hasStage(String filename) {
         return addFile.containsKey(filename);
     }
 
+    /** 暂存区是否有该文件的删除记录 */
     public boolean hasRemove(String filename) {
         return removeFile.contains(filename);
     }
 
+    /** 将文件移除暂存区，同步删掉对应 blob */
     public void removeStage(String name) {
         Repository.deleteBlob(addFile.get(name));
         addFile.remove(name);
     }
 
+    /** 取消一个已删除的记录 */
     public void deleteRemove(String name) {
         removeFile.remove(name);
+    }
+
+    /** 暂存区是否为空 */
+    public boolean isEmpty() {
+        return (addFile.isEmpty() && removeFile.isEmpty());
     }
 }
