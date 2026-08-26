@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import static gitlet.Utils.*;
 
@@ -66,6 +67,16 @@ public class Repository {
 
     /** 获取指定 commit */
     public static Commit getCommit(String sha1) {
+        if (sha1.length() < 40) {
+            // 处理简写情况
+            List<String> commitList = Utils.plainFilenamesIn(COMMITS_DIR);
+            for (String name : commitList) {
+                if (sha1.equals(name.substring(0, sha1.length()))) {
+                    sha1 = name;
+                    break;
+                }
+            }
+        }
         File file = join(COMMITS_DIR, sha1);
         if (!file.exists()) {
             return null;

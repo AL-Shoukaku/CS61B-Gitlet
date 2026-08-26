@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.join;
@@ -142,8 +141,8 @@ public class Gitlet {
             System.out.println(Utils.sha1(Utils.serialize(commit)));
             // 打印 merge
             if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
-                String first = toHex(commit.getFirstParent()).substring(0, 7);
-                String second = toHex(commit.getSecondParent()).substring(0, 7);
+                String first = commit.getFirstParent().substring(0, 7);
+                String second = commit.getSecondParent().substring(0, 7);
                 System.out.println("Merge: " + first + " " + second);
             }
             // 打印 date
@@ -170,8 +169,8 @@ public class Gitlet {
             System.out.print("commit ");
             System.out.println(Utils.sha1(Utils.serialize(commit)));
             if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
-                String first = toHex(commit.getFirstParent()).substring(0, 7);
-                String second = toHex(commit.getSecondParent()).substring(0, 7);
+                String first = commit.getFirstParent().substring(0, 7);
+                String second = commit.getSecondParent().substring(0, 7);
                 System.out.println("Merge: " + first + " " + second);
             }
             System.out.println(String.format(Locale.US,
@@ -397,15 +396,5 @@ public class Gitlet {
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
-    }
-
-    /** sha1 转 16 进制字符串 */
-    private static String toHex(String str) {
-        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 }
