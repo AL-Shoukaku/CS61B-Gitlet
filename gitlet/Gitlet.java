@@ -290,7 +290,36 @@ public class Gitlet {
     }
 
     private static void checkoutBranch(String branchName) {
-
+        List<String> branchList = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        if (!branchList.contains(branchName)) {
+            System.out.println("No such branch exists.");
+            return;
+        }
+        if (branchName.equals(Repository.getHead().getBranch())) {
+            System.out.println("No need to checkout the current branch.");
+        }
+        Commit newCommit = Repository.getCommit(Repository.getBranch(branchName).getCommit());
+        Commit curCommit = Repository.getCurrentCommit();
+        List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
+        for (String name : newCommit.getBlobs().keySet()) {
+            if (!curCommit.hasFile(name) && workList.contains(name)) {
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
+                return;
+            }
+        }
+        // 清空暂存区并删掉当前 commit 的所有文件, 然后写入新 commit 的所有文件
+        Repository.clearStage();
+        for (String name : curCommit.getBlobs().keySet()) {
+            Repository.deleteFile(name);
+        }
+        for (Map.Entry<String, String> entry : newCommit.getBlobs().entrySet()) {
+            Repository.writeFile(entry.getKey(), Repository.getBlob(entry.getValue()).getFileContents());
+        }
+        Head head = Repository.getHead();
+        head.setCommit(Utils.sha1(Utils.serialize(newCommit)));
+        head.setBranch(branchName);
+        Repository.writeHead(head);
     }
 
     public static void branch(String[] args) {
