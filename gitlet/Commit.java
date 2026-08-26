@@ -24,8 +24,8 @@ public class Commit implements Serializable {
 
     /** The message of this Commit. */
     private final String message;
-    private String firstParent;
-    private String secondParent;
+    private final String firstParent;
+    private final String secondParent;
     private HashMap<String, String> blobs;  // <name, blob>
     private final Date date;
 
@@ -37,12 +37,20 @@ public class Commit implements Serializable {
         this.blobs = new HashMap<>();
     }
 
-    public void setFirstParent(String parent) {
-        this.firstParent = parent;
+    public String getFirstParent() {
+        return firstParent;
     }
 
-    public void setSecondParent(String parent) {
-        this.secondParent = parent;
+    public String getSecondParent() {
+        return secondParent;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     public void addBlob(String filename, String sha1) {

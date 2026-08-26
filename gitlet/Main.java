@@ -32,6 +32,12 @@ public class Main {
             case "rm":
                 Gitlet.rm(args);
                 break;
+            case "log":
+                Gitlet.log(args);
+                break;
+            case "global-log":
+                Gitlet.globalLog(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

@@ -1,8 +1,8 @@
 package gitlet;
 
 import java.io.File;
-import java.util.Date;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static gitlet.Utils.join;
 import static gitlet.Utils.readContentsAsString;
@@ -126,10 +126,70 @@ public class Gitlet {
         System.out.println("No reason to remove the file.");
     }
 
+    public static void log(String[] args) {
+        if (args.length > 1) {
+            errorOperands();
+        }
+        Commit commit = Repository.getCurrentCommit();
+        while (true) {
+            // 打印 ===
+            System.out.println("===");
+            // 打印 commit sha1
+            System.out.print("commit ");
+            System.out.println(Utils.sha1(Utils.serialize(commit)));
+            // 打印 merge
+            if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
+                String first = toHex(commit.getFirstParent()).substring(0, 7);
+                String second = toHex(commit.getSecondParent()).substring(0, 7);
+                System.out.println("Merge: " + first + " " + second);
+            }
+            // 打印 date
+            System.out.println(String.format(Locale.US,
+                    "Date: %1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
+                    commit.getDate()));
+            // 打印 message 和最后的空行
+            System.out.println(commit.getMessage() + "\n");
+            if (commit.getFirstParent() == null) {
+                break;
+            }
+            commit = Repository.getCommit(commit.getFirstParent());
+        }
+    }
+
+    public static void globalLog(String[] args) {
+        if (args.length > 1) {
+            errorOperands();
+        }
+        List<String> nameList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
+        for (String filename : nameList) {
+            Commit commit = Repository.getCommit(filename);
+            System.out.println("===");
+            System.out.print("commit ");
+            System.out.println(Utils.sha1(Utils.serialize(commit)));
+            if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
+                String first = toHex(commit.getFirstParent()).substring(0, 7);
+                String second = toHex(commit.getSecondParent()).substring(0, 7);
+                System.out.println("Merge: " + first + " " + second);
+            }
+            System.out.println(String.format(Locale.US,
+                    "Date: %1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
+                    commit.getDate()));
+            System.out.println(commit.getMessage() + "\n");
+        }
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
     }
 
-
+    /** sha1 转 16 进制字符串 */
+    private static String toHex(String str) {
+        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
 }
