@@ -159,4 +159,12 @@ public class Repository {
     public static void clearStage() {
         writeStage(new Stage());
     }
+
+    /** 根据 filename 删除当前工作目录的文件 */
+    public static void deleteFile(String filename) {
+        File file = join(CWD, filename);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
 }

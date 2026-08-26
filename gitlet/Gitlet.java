@@ -64,6 +64,7 @@ public class Gitlet {
         }
         stage.addFile(name, Utils.sha1(Utils.serialize(blob)));
         Repository.writeBlob(blob, Utils.sha1(Utils.serialize(blob)));
+        Repository.writeStage(stage);
     }
 
     public static void commit(String[] args) {
@@ -103,7 +104,26 @@ public class Gitlet {
     }
 
     public static void rm(String[] args) {
-
+        if (args.length != 2) {
+            errorOperands();
+        }
+        String filename = args[1];
+        Stage stage = Repository.getStage();
+        // 如果被暂存了，则直接取消暂存
+        if (stage.hasStage(filename)) {
+            stage.removeStage(filename);
+            Repository.writeStage(stage);
+            return;
+        }
+        Commit curCommit = Repository.getCurrentCommit();
+        //如果在当前 commit 中，则加入到 remove 中，如果该文件在工作目录中存在，则删除该文件
+        if (curCommit.hasFile(filename)) {
+            stage.removeFile(filename);
+            Repository.writeStage(stage);
+            Repository.deleteFile(filename);
+            return;
+        }
+        System.out.println("No reason to remove the file.");
     }
 
     private static void errorOperands() {
