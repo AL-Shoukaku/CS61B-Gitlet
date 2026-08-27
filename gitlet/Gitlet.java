@@ -475,7 +475,7 @@ public class Gitlet {
         }
         String message = "Merged " + obranch.getName() + " into " + cbranch.getName() + ".";
         if (!conflictList.isEmpty()) {
-            message += "Encountered a merge conflict.";
+            System.out.println("Encountered a merge conflict.");
         }
         doCommit(message, obranch.getCommit());
     }
@@ -514,19 +514,6 @@ public class Gitlet {
         if (commit.getSecondParent() != null && !parent.containsKey(commit.getSecondParent())) {
             dfsCommit(Repository.getCommit(commit.getSecondParent()), parent, dis + 1);
         }
-    }
-
-    /** 给定一个 commit 计算它在树种的深度 */
-    private static int countDepth(Commit commit) {
-        if (commit == null) {
-            return 0;
-        }
-        int depth = 1;
-        while (commit.getFirstParent() != null) {
-            commit = Repository.getCommit(commit.getFirstParent());
-            depth++;
-        }
-        return depth;
     }
 
     /** 利用 sha1 来判断两个 commit 是同一个 commit */
