@@ -256,13 +256,16 @@ public class Gitlet {
                 untrackList.add(filename);
             }
         }
+        // 遍历暂存区看是否有多删掉的
         for (String filename : stage.getAddFile().keySet()) {
             if (!workList.contains(filename)) {
                 notStage.put(filename, " (deleted)");
             }
         }
+        // 遍历 commit，不能重复暂存区和remove的
         for (String filename : curCommit.getBlobs().keySet()) {
-            if (!workList.contains(filename) && !stage.hasStage(filename)) {
+            if (!workList.contains(filename) && !stage.hasStage(filename)
+                    && !stage.hasRemove(filename)) {
                 notStage.put(filename, " (deleted)");
             }
         }
@@ -586,10 +589,12 @@ public class Gitlet {
             sb.append("<<<<<<< HEAD\n");
             if (cur.hasFile(filename)) {
                 sb.append(new String(cur.getBlob(filename).getFileContents()));
+                System.out.println("\n");
             }
             sb.append("=======\n");
             if (oth.hasFile(filename)) {
                 sb.append(new String(oth.getBlob(filename).getFileContents()));
+                System.out.println("\n");
             }
             sb.append(">>>>>>>");
             Blob blob = new Blob(sb.toString().getBytes());
