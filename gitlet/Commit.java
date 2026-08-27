@@ -64,6 +64,11 @@ public class Commit implements Serializable {
         return Repository.getBlob(blobs.get(filename));
     }
 
+    /** 根据 filename 获取对应的 blob 的 sha1 */
+    public String getBlobSha1(String filename) {
+        return blobs.get(filename);
+    }
+
     /** 获取整个 blobs */
     public TreeMap<String, String> getBlobs() {
         return blobs;

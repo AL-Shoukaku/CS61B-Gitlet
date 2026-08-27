@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.join;
@@ -73,12 +74,15 @@ public class Gitlet {
         if (args.length != 2) {
             errorOperands();
         }
+        doCommit(args[1], null);
+    }
+
+    public static void doCommit(String message, String secondParent) {
         Stage stage = Repository.getStage();
         if (stage.isEmpty()) {
             System.out.println("Nochanges added to the commit.");
             return;
         }
-        String message = args[1];
         if (message.isEmpty()) {
             System.out.println("Please entera commit message.");
             return;
@@ -86,7 +90,7 @@ public class Gitlet {
         Commit curCommit = Repository.getCurrentCommit();
         Head head = Repository.getHead();
         Branch branch = Repository.getBranch(head.getBranch());
-        Commit commit = new Commit(message, head.getCommit(), null, new Date());
+        Commit commit = new Commit(message, head.getCommit(), secondParent, new Date());
         // 先遍历当前 commit，不在 stage 中的文件一律加入新 commit
         for (Map.Entry<String, String> entry : curCommit.getBlobs().entrySet()) {
             if (!stage.hasStage(entry.getKey()) && !stage.hasRemove(entry.getKey())) {
@@ -401,8 +405,9 @@ public class Gitlet {
             System.out.println("You have uncommitted changes.");
             return;
         }
+        Head head = Repository.getHead();
         Branch obranch = Repository.getBranch(args[1]);
-        Branch cbranch = Repository.getBranch(Repository.getHead().getBranch());
+        Branch cbranch = Repository.getBranch(head.getBranch());
         if (obranch == null) {
             System.out.println("A branch with that name does not exist.");
             return;
@@ -414,7 +419,42 @@ public class Gitlet {
         Commit curCommit = Repository.getCurrentCommit();
         Commit othCommit = Repository.getCommit(obranch.getCommit());
         Commit splitCommit = findSplitPoint(curCommit, othCommit);
-
+        // 给定分支是分裂点，什么也不做
+        if (commitEquals(othCommit, splitCommit)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+        // 当前分支是分裂点，则移动到给定分支，复用 checkout 并设置好 head 和 cbranch
+        if (commitEquals(curCommit, splitCommit)) {
+            checkoutBranch(obranch.getName());
+            cbranch.setCommit(obranch.getCommit());
+            head.setBranch(cbranch.getName());
+            Repository.writeHead(head);
+            Repository.writeBranch(cbranch);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+        List<String> conflictList = new ArrayList<>();
+        Stage stage = Repository.getStage();
+        // 遍历 split 的所有文件
+        for (String filename : splitCommit.getBlobs().keySet()) {
+            dealSplitHas(curCommit, othCommit, splitCommit, filename, stage, conflictList);
+        }
+        // 遍历 given branch 的所有文件
+        for (String filename : othCommit.getBlobs().keySet()) {
+            dealGivenBranch(curCommit, othCommit, filename, stage, conflictList);
+        }
+        // 检验是否与当前工作目录的 untrack 发生冲突
+        checkWorkInMerge(curCommit, stage, conflictList);
+        // 处理冲突文件并 stage
+        dealConflict(curCommit, othCommit, stage, conflictList);
+        // 进行新提交，复用 commit 代码，先写回stage
+        Repository.writeStage(stage);
+        String message = "Merged " + obranch.getName() + " into " + cbranch.getName() + ".";
+        if (!conflictList.isEmpty()) {
+            message += "Encountered a merge conflict.";
+        }
+        doCommit(message, obranch.getCommit());
     }
 
     private static void errorOperands() {
@@ -435,8 +475,7 @@ public class Gitlet {
                 other = Repository.getCommit(other.getFirstParent());
             }
         }
-        while (!Utils.sha1(Utils.serialize(current)).equals
-                (Utils.sha1(Utils.serialize(other)))) {
+        while (!commitEquals(current, other)) {
             current = Repository.getCommit(current.getFirstParent());
             other = Repository.getCommit(other.getFirstParent());
         }
@@ -450,5 +489,85 @@ public class Gitlet {
             commit = Repository.getCommit(commit.getFirstParent());
         }
         return depth;
+    }
+
+    /** 利用 sha1 来判断两个 commit 是同一个 commit */
+    private static boolean commitEquals(Commit a, Commit b) {
+        return Utils.sha1(Utils.serialize(a)).equals(Utils.sha1(Utils.serialize(b)));
+    }
+
+    /** 分类处理 split 种含有的文件 */
+    private static void dealSplitHas(Commit cur, Commit oth, Commit split,
+                                     String filename, Stage stage, List<String> conflict) {
+        Blob curBlob = cur.getBlob(filename);
+        Blob othBlob = oth.getBlob(filename);
+        Blob splitBlob = split.getBlob(filename);
+
+        // 两者都有则进一步判断，一方有且改动则表示冲突，否则不作为
+        if (cur.hasFile(filename) && oth.hasFile(filename)) {
+            // 若文件内容一样则不用变动，不一样则进入下一步判断
+            if (!curBlob.getFileContents().equals(othBlob.getFileContents())) {
+                // 若 cur 与 split相同，则 stage other，若 other 与 split 相同，则不作为，否则是冲突
+                if (curBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                    stage.addFile(filename, oth.getBlobSha1(filename));
+                } else if (!othBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                    conflict.add(filename);
+                }
+            }
+        } else if (oth.hasFile(filename)
+                && !othBlob.getFileContents().equals(splitBlob.getFileContents())) {
+            conflict.add(filename);
+        } else if (cur.hasFile(filename)) {
+            if (!curBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                conflict.add(filename);
+            } else {
+                stage.removeFile(filename);
+            }
+        }
+    }
+
+    private static void dealGivenBranch(Commit cur, Commit oth, String filename,
+                                        Stage stage, List<String> conflict) {
+        if (!cur.hasFile(filename)) {
+            stage.addFile(filename, oth.getBlobSha1(filename));
+        } else {
+            Blob curBlob = cur.getBlob(filename);
+            Blob othBlob = oth.getBlob(filename);
+            if (!curBlob.getFileContents().equals(curBlob.getFileContents())) {
+                conflict.add(filename);
+            }
+        }
+    }
+
+    private static void checkWorkInMerge(Commit current, Stage stage, List<String> conflict) {
+        List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
+        for (String name : workList) {
+            if (!current.hasFile(name) && (conflict.contains(name)
+                    || stage.hasStage(name) || stage.hasRemove(name))) {
+                // 有冲突直接退出
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+    }
+
+    private static void dealConflict(Commit cur, Commit oth, Stage stage, List<String> conflict) {
+        for (String filename : conflict) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("<<<<<<< HEAD\n");
+            if (cur.hasFile(filename)) {
+                sb.append(new String(cur.getBlob(filename).getFileContents()));
+            }
+            sb.append("=======\n");
+            if (oth.hasFile(filename)) {
+                sb.append(new String(oth.getBlob(filename).getFileContents()));
+            }
+            sb.append(">>>>>>>");
+            Blob blob = new Blob(sb.toString().getBytes());
+            String blobSha1 = Utils.sha1(Utils.serialize(blob));
+            Repository.writeBlob(blob, blobSha1);
+            stage.addFile(filename, blobSha1);
+        }
     }
 }
