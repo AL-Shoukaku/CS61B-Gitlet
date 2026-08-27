@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static gitlet.Utils.join;
@@ -442,7 +441,9 @@ public class Gitlet {
         }
         // 遍历 given branch 的所有文件
         for (String filename : othCommit.getBlobs().keySet()) {
-            dealGivenBranch(curCommit, othCommit, filename, stage, conflictList);
+            if (!splitCommit.hasFile(filename)) {
+                dealGivenBranch(curCommit, othCommit, filename, stage, conflictList);
+            }
         }
         // 检验是否与当前工作目录的 untrack 发生冲突
         checkWorkInMerge(curCommit, stage, conflictList);
@@ -450,6 +451,14 @@ public class Gitlet {
         dealConflict(curCommit, othCommit, stage, conflictList);
         // 进行新提交，复用 commit 代码，先写回stage
         Repository.writeStage(stage);
+        // commit 不会写或删除文件， 需要手动操作
+        for (Map.Entry<String, String> entry : stage.getAddFile().entrySet()) {
+            Blob blob = Repository.getBlob(entry.getValue());
+            Repository.writeFile(entry.getKey(), blob.getFileContents());
+        }
+        for (String filename : stage.getRemoveFile()) {
+            Repository.deleteFile(filename);
+        }
         String message = "Merged " + obranch.getName() + " into " + cbranch.getName() + ".";
         if (!conflictList.isEmpty()) {
             message += "Encountered a merge conflict.";
@@ -484,9 +493,13 @@ public class Gitlet {
 
     /** 给定一个 commit 计算它在树种的深度 */
     private static int countDepth(Commit commit) {
-        int depth = 0;
-        while (commit != null) {
+        if (commit == null) {
+            return 0;
+        }
+        int depth = 1;
+        while (commit.getFirstParent() != null) {
             commit = Repository.getCommit(commit.getFirstParent());
+            depth++;
         }
         return depth;
     }
@@ -506,19 +519,19 @@ public class Gitlet {
         // 两者都有则进一步判断，一方有且改动则表示冲突，否则不作为
         if (cur.hasFile(filename) && oth.hasFile(filename)) {
             // 若文件内容一样则不用变动，不一样则进入下一步判断
-            if (!curBlob.getFileContents().equals(othBlob.getFileContents())) {
+            if (!Arrays.equals(curBlob.getFileContents(), othBlob.getFileContents())) {
                 // 若 cur 与 split相同，则 stage other，若 other 与 split 相同，则不作为，否则是冲突
-                if (curBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                if (Arrays.equals(curBlob.getFileContents(), splitBlob.getFileContents())) {
                     stage.addFile(filename, oth.getBlobSha1(filename));
-                } else if (!othBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                } else if (!Arrays.equals(othBlob.getFileContents(), splitBlob.getFileContents())) {
                     conflict.add(filename);
                 }
             }
         } else if (oth.hasFile(filename)
-                && !othBlob.getFileContents().equals(splitBlob.getFileContents())) {
+                && !Arrays.equals(othBlob.getFileContents(), splitBlob.getFileContents())) {
             conflict.add(filename);
         } else if (cur.hasFile(filename)) {
-            if (!curBlob.getFileContents().equals(splitBlob.getFileContents())) {
+            if (!Arrays.equals(curBlob.getFileContents(), splitBlob.getFileContents())) {
                 conflict.add(filename);
             } else {
                 stage.removeFile(filename);
@@ -526,6 +539,7 @@ public class Gitlet {
         }
     }
 
+    /** 处理 split 中没有但给定 branch 里有的文件 */
     private static void dealGivenBranch(Commit cur, Commit oth, String filename,
                                         Stage stage, List<String> conflict) {
         if (!cur.hasFile(filename)) {
@@ -533,12 +547,13 @@ public class Gitlet {
         } else {
             Blob curBlob = cur.getBlob(filename);
             Blob othBlob = oth.getBlob(filename);
-            if (!curBlob.getFileContents().equals(curBlob.getFileContents())) {
+            if (!Arrays.equals(curBlob.getFileContents(), othBlob.getFileContents())) {
                 conflict.add(filename);
             }
         }
     }
 
+    /** 检查 merge 操作是否与当前工作目录中的 untrack 文件冲突 */
     private static void checkWorkInMerge(Commit current, Stage stage, List<String> conflict) {
         List<String> workList = Utils.plainFilenamesIn(Repository.CWD);
         for (String name : workList) {
@@ -552,6 +567,7 @@ public class Gitlet {
         }
     }
 
+    /** 处理 merge 中的冲突文件 */
     private static void dealConflict(Commit cur, Commit oth, Stage stage, List<String> conflict) {
         for (String filename : conflict) {
             StringBuilder sb = new StringBuilder();

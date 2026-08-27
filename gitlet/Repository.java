@@ -156,14 +156,6 @@ public class Repository {
         return getCommit(getHead().getCommit());
     }
 
-    /** 删除一个 blob */
-    public static void deleteBlob(String sha1) {
-        File file = join(BLOBS_DIR, sha1);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
-
     /** 清空暂存区 */
     public static void clearStage() {
         writeStage(new Stage());

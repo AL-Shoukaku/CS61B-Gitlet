@@ -43,9 +43,8 @@ public class Stage implements Serializable {
         return removeFile.contains(filename);
     }
 
-    /** 将文件移除暂存区，同步删掉对应 blob */
+    /** 将文件移除暂存区，不删掉对应blob应为可能有别人在引用！ */
     public void removeStage(String name) {
-        Repository.deleteBlob(addFile.get(name));
         addFile.remove(name);
     }
 
