@@ -393,8 +393,62 @@ public class Gitlet {
         Repository.writeBranch(branch);
     }
 
+    public static void merge(String[] args) {
+        if (args.length != 2) {
+            errorOperands();
+        }
+        if (!Repository.getStage().isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            return;
+        }
+        Branch obranch = Repository.getBranch(args[1]);
+        Branch cbranch = Repository.getBranch(Repository.getHead().getBranch());
+        if (obranch == null) {
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        if (obranch.getName().equals(cbranch.getName())) {
+            System.out.println("Cannot merge a branch with itself.");
+            return;
+        }
+        Commit curCommit = Repository.getCurrentCommit();
+        Commit othCommit = Repository.getCommit(obranch.getCommit());
+        Commit splitCommit = findSplitPoint(curCommit, othCommit);
+
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
+    }
+
+    /** 找到两个 commit 的分裂点，确保两个 commit 不是同一个 */
+    private static Commit findSplitPoint(Commit current, Commit other) {
+        int curDepth = countDepth(current);
+        int othDepth = countDepth(other);
+        if (curDepth > othDepth) {
+            for (int i = 0; i < curDepth - othDepth; i++) {
+                current = Repository.getCommit(current.getFirstParent());
+            }
+        } else if (othDepth > curDepth) {
+            for (int i = 0; i < othDepth - curDepth; i++) {
+                other = Repository.getCommit(other.getFirstParent());
+            }
+        }
+        while (!Utils.sha1(Utils.serialize(current)).equals
+                (Utils.sha1(Utils.serialize(other)))) {
+            current = Repository.getCommit(current.getFirstParent());
+            other = Repository.getCommit(other.getFirstParent());
+        }
+        return current;
+    }
+
+    /** 给定一个 commit 计算它在树种的深度 */
+    private static int countDepth(Commit commit) {
+        int depth = 0;
+        while (commit != null) {
+            commit = Repository.getCommit(commit.getFirstParent());
+        }
+        return depth;
     }
 }
