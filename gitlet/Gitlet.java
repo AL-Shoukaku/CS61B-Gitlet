@@ -589,14 +589,12 @@ public class Gitlet {
             sb.append("<<<<<<< HEAD\n");
             if (cur.hasFile(filename)) {
                 sb.append(new String(cur.getBlob(filename).getFileContents()));
-                System.out.println("\n");
             }
             sb.append("=======\n");
             if (oth.hasFile(filename)) {
                 sb.append(new String(oth.getBlob(filename).getFileContents()));
-                System.out.println("\n");
             }
-            sb.append(">>>>>>>");
+            sb.append(">>>>>>>\n");
             Blob blob = new Blob(sb.toString().getBytes());
             String blobSha1 = Utils.sha1(Utils.serialize(blob));
             Repository.writeBlob(blob, blobSha1);
