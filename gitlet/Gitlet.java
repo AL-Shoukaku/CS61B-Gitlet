@@ -487,22 +487,33 @@ public class Gitlet {
 
     /** 找到两个 commit 的分裂点，确保两个 commit 不是同一个 */
     private static Commit findSplitPoint(Commit current, Commit other) {
-        int curDepth = countDepth(current);
-        int othDepth = countDepth(other);
-        if (curDepth > othDepth) {
-            for (int i = 0; i < curDepth - othDepth; i++) {
-                current = Repository.getCommit(current.getFirstParent());
-            }
-        } else if (othDepth > curDepth) {
-            for (int i = 0; i < othDepth - curDepth; i++) {
-                other = Repository.getCommit(other.getFirstParent());
+        HashMap<String, Integer> curParent = new HashMap<>();
+        HashMap<String, Integer> othParent = new HashMap<>();
+        dfsCommit(current, curParent, 0);
+        dfsCommit(other, othParent, 0);
+        Commit min = null;
+        int minDis = Integer.MAX_VALUE;
+        for (Map.Entry<String, Integer> entry : curParent.entrySet()) {
+            if (othParent.containsKey(entry.getKey()) && entry.getValue() < minDis) {
+                min = Repository.getCommit(entry.getKey());
+                minDis = entry.getValue();
             }
         }
-        while (!commitEquals(current, other)) {
-            current = Repository.getCommit(current.getFirstParent());
-            other = Repository.getCommit(other.getFirstParent());
+        return min;
+    }
+
+    /** 采用 DFS 遍历一个 commit 并记录其父节点及其距离,对于起始节点需要自行处理 */
+    private static void dfsCommit(Commit commit, HashMap<String, Integer> parent, int dis) {
+        String sha1 = Utils.sha1(Utils.serialize(commit));
+        if (!parent.containsKey(sha1) || (parent.containsKey(sha1) && parent.get(sha1) > dis)) {
+            parent.put(sha1, dis);
         }
-        return current;
+        if (commit.getFirstParent() != null && !parent.containsKey(commit.getFirstParent())) {
+            dfsCommit(Repository.getCommit(commit.getFirstParent()), parent, dis + 1);
+        }
+        if (commit.getSecondParent() != null && !parent.containsKey(commit.getSecondParent())) {
+            dfsCommit(Repository.getCommit(commit.getSecondParent()), parent, dis + 1);
+        }
     }
 
     /** 给定一个 commit 计算它在树种的深度 */
