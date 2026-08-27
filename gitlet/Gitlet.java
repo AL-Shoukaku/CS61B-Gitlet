@@ -234,6 +234,7 @@ public class Gitlet {
             System.out.println(name);
         }
         System.out.println("\n=== Modifications Not Staged For Commit ===");
+        TreeMap<String, String> notStage = new TreeMap<>(); // 记录对应的文件与原因
         for (String filename : workList) {
             File file = join(Repository.CWD, filename);
             if (file.isDirectory()) {
@@ -244,16 +245,29 @@ public class Gitlet {
                 File stageFile = join(Repository.BLOBS_DIR, stageMap.get(filename));
                 if (!Arrays.equals(Utils.readContents(file),
                         Utils.readObject(stageFile, Blob.class).getFileContents())) {
-                    System.out.println(filename);
+                    notStage.put(filename, " (modified)");
                 }
             } else if (curCommit.hasFile(filename)) {
                 if (!Arrays.equals(Utils.readContents(file),
                         curCommit.getBlob(filename).getFileContents())) {
-                    System.out.println(filename);
+                    notStage.put(filename, " (modified)");
                 }
             } else {
                 untrackList.add(filename);
             }
+        }
+        for (String filename : stage.getAddFile().keySet()) {
+            if (!workList.contains(filename)) {
+                notStage.put(filename, " (deleted)");
+            }
+        }
+        for (String filename : curCommit.getBlobs().keySet()) {
+            if (!workList.contains(filename) && !stage.hasStage(filename)) {
+                notStage.put(filename, " (deleted)");
+            }
+        }
+        for (Map.Entry<String, String> entry : notStage.entrySet()) {
+            System.out.println(entry.getKey() + entry.getValue());
         }
         System.out.println("\n=== Untracked Files ===");
         for (String filename : untrackList) {
