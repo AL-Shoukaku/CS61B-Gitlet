@@ -2,6 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -107,6 +108,11 @@ public class Repository {
     /** 写入 branch */
     public static void writeBranch(Branch branch) {
         File file = join(BRANCHES_DIR, branch.getName());
+        // 应对分支名包含 `/` 的情况，创建对应的目录
+        File parent = file.getParentFile();
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -215,6 +221,48 @@ public class Repository {
         File file = join(BRANCHES_DIR, branchName);
         if (file.exists()) {
             file.delete();
+        }
+    }
+
+    /** 判断是否有这个 commit */
+    public static boolean hasCommit(String sha1) {
+        return Utils.plainFilenamesIn(COMMITS_DIR).contains(sha1);
+    }
+
+    /** 判断是否有这个 blob */
+    public static boolean hasBlob(String sha1) {
+        return Utils.plainFilenamesIn(BLOBS_DIR).contains(sha1);
+    }
+
+    /** 判断是否有这个 branch */
+    public static boolean hasBranch(String branchName) {
+        return (getBranch(branchName) != null);
+    }
+
+    /** 获取所有分支的名字，能递归目录 */
+    public static List<String> getAllBranchName() {
+        List<String> result = new ArrayList<>();
+        // 获取目录中的所有文件
+        File[] files = join(BRANCHES_DIR).listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isDirectory()) {
+                getAllBranchNameRecursive(files[i].getName(), result);
+            } else {
+                result.add(files[i].getName());
+            }
+        }
+        return result;
+    }
+
+    private static void getAllBranchNameRecursive(String dirName, List<String> result) {
+        File dir = join(BRANCHES_DIR, dirName);
+        File[] files = dir.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isDirectory()) {
+                getAllBranchNameRecursive(dirName + "/" + files[i].getName(), result);
+            } else {
+                result.add(dirName + "/" + files[i].getName());
+            }
         }
     }
 }

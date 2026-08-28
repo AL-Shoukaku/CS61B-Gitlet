@@ -23,7 +23,7 @@ public class RemoteRepo {
 
     public RemoteRepo(Remote remote) {
         String path = remote.getPath();
-        CWD = join(path.substring(0,path.length() - 8));
+        CWD = join(Repository.CWD, path.substring(0, path.length() - 8));
         GITLET_DIR = join(path);
         COMMITS_DIR = join(GITLET_DIR, "commits");
         BLOBS_DIR = join(GITLET_DIR, "blobs");
@@ -297,4 +297,48 @@ public class RemoteRepo {
         }
         writeFile(filename, (Object) commit.getBlob(filename).getFileContents());
     }
+
+    /** 执行 fetch 操作 */
+    public void fetch(String repoName, String branchName) {
+        HashMap<String, Commit> allCommit = new HashMap<>();
+        Branch branch = getBranch(branchName);
+        Commit remoteCommit = getCommit(branch.getCommit());
+        getAllCommit(remoteCommit, allCommit);
+        for (Map.Entry<String, Commit> entry : allCommit.entrySet()) {
+            String sha1 = entry.getKey();
+            Commit commit = entry.getValue();
+            Map<String, String> blobs = commit.getBlobs();
+            if (Repository.hasCommit(sha1)) {
+                continue;
+            }
+            // 将该 commit 的所有 blob 都拷贝到本地
+            for (String blobSha1 : blobs.values()) {
+                if (Repository.hasBlob(blobSha1)) {
+                    continue;
+                }
+                Blob blob = getBlob(blobSha1);
+                Repository.writeBlob(blob, blobSha1);
+            }
+            Repository.writeCommit(commit, sha1);
+        }
+        String localBranch = repoName + "/" + branchName;
+        Branch newBranch = Repository.getBranch(localBranch);
+        if (newBranch == null) {
+            newBranch = new Branch(localBranch);
+        }
+        newBranch.setCommit(branch.getCommit());
+        Repository.writeBranch(newBranch);
+    }
+
+    /** 获取该 commit 和其所有的父 commit */
+    private void getAllCommit(Commit commit, HashMap<String, Commit> allCommit) {
+        allCommit.put(Utils.sha1(Utils.serialize(commit)), commit);
+        if (commit.getFirstParent() != null) {
+            getAllCommit(getCommit(commit.getFirstParent()), allCommit);
+        }
+        if (commit.getSecondParent() != null) {
+            getAllCommit(getCommit(commit.getSecondParent()), allCommit);
+        }
+    }
+
 }

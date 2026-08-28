@@ -68,6 +68,12 @@ public class Main {
             case "push":
                 Gitlet.push(args);
                 break;
+            case "fetch":
+                Gitlet.fetch(args);
+                break;
+            case "pull":
+                Gitlet.pull(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

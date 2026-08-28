@@ -1,7 +1,6 @@
 package gitlet;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import static gitlet.Utils.join;
@@ -211,7 +210,7 @@ public class Gitlet {
         Head head = Repository.getHead();
         Stage stage = Repository.getStage();
         Commit curCommit = Repository.getCurrentCommit();
-        List<String> branchList = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        List<String> branchList = Repository.getAllBranchName();
         branchList.sort(Comparator.naturalOrder());
         TreeMap<String, String> stageMap = new TreeMap<>(stage.getAddFile());   //treemap自动排序
         List<String> removeList = (new ArrayList<>(stage.getRemoveFile()));
@@ -315,7 +314,7 @@ public class Gitlet {
     }
 
     private static void checkoutBranch(String branchName) {
-        List<String> branchList = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        List<String> branchList = Repository.getAllBranchName();
         if (!branchList.contains(branchName)) {
             System.out.println("No such branch exists.");
             return;
@@ -353,7 +352,7 @@ public class Gitlet {
             errorOperands();
         }
         String branchName = args[1];
-        List<String> allBranch = Utils.plainFilenamesIn(Repository.BRANCHES_DIR);
+        List<String> allBranch = Repository.getAllBranchName();
         if (allBranch.contains(branchName)) {
             System.out.println("A branch with that name already exists.");
             return;
@@ -541,6 +540,37 @@ public class Gitlet {
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
+    }
+
+    public static void fetch(String[] args) {
+        if (args.length != 3) {
+            errorOperands();
+        }
+        String remoteName = args[1];
+        String remoteBranch = args[2];
+        Remote remote = Repository.getRemote(remoteName);
+        if (remote == null) {
+            System.out.println("A remote withthat name does not exist.");
+            return;
+        }
+        RemoteRepo repo = new RemoteRepo(remote);
+        if (!repo.validRepo()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+        if (repo.getBranch(remoteBranch) == null) {
+            System.out.println("That remote does not have that branch.");
+            return;
+        }
+        repo.fetch(remoteName, remoteBranch);
+    }
+
+    public static void pull(String[] args) {
+        fetch(args);
+        String[] mergeArgs = new String[2];
+        mergeArgs[0] = "merge";
+        mergeArgs[1] = args[1] + "/" + args[2];
+        merge(mergeArgs);
     }
 
     /** 找到两个 commit 的分裂点，确保两个 commit 不是同一个 */
