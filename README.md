@@ -465,6 +465,41 @@ java gitlet.Main push <remote name> <remote branch name>
 
 如果远程仓库的 `.gitlet` 不存在，则输出 `Remote directory not found.`
 
+### fetch
+
+#### 使用方法
+
+```bash
+java gitlet.Main fetch <remote name> <remote branch name>
+```
+
+- `remote name`:要 fetch 的远程仓库的名字
+- `remote branch name`:要 fetch 的远程分支名字
+
+#### 功能描述
+
+将远程仓库的指定分支的最新 commit 及其所有历史 commit 全部复制到本地仓库的远程分支下，并且不会修改本地仓库的 head 指针。
+
+将在本地仓库创建名为 `<remote name>/<remote branch name>` 的远程分支，该分支指向远程仓库对应分支的最新 commit。
+
+- 如果远程仓库不存在该分支，则输出 `That remote does not have that branch.`
+- 如果远程仓库的 `.gitlet` 不存在，则输出 `Remote directory not found.`
+
+### pull
+
+#### 使用方法
+
+```bash
+java gitlet.Main pull <remote name> <remote branch name>
+```
+
+- `remote name`:要 pull 的远程仓库的名字
+- `remote branch name`:要 pull 的远程分支名字
+
+#### 功能描述
+
+会先执行 fetch 操作，然后再将远程仓库的指定分支 merge 到本地仓库的当前分支。
+
 ---
 
 ## 测试方法
