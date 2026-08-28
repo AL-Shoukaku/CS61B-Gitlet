@@ -65,6 +65,9 @@ public class Main {
             case "rm-remote":
                 Gitlet.rmRemote(args);
                 break;
+            case "push":
+                Gitlet.push(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

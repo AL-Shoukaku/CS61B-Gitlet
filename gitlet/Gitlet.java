@@ -511,6 +511,33 @@ public class Gitlet {
         Repository.deleteRemote(args[1]);
     }
 
+    public static void push(String[] args) {
+        if (args.length != 3) {
+            errorOperands();
+        }
+        String remoteName = args[1];
+        String remoteBranch = args[2];
+        Remote remote = Repository.getRemote(remoteName);
+        if (remote == null) {
+            System.out.println("A remote withthat name does not exist.");
+            return;
+        }
+        RemoteRepo repo = new RemoteRepo(remote);
+        if (!repo.validRepo()) {
+            System.out.println("Remote directory not found.");
+            return;
+        }
+        Branch branch = repo.getBranch(remoteBranch);
+        HashMap<String, Commit> allCommit = new HashMap<>();
+        getAllCommit(Repository.getCurrentCommit(), allCommit);
+        // 如果远程仓库有该分支，则检查分支头是否在当前路径上，分支不存在则跳过这一步，后续创建该分支
+        if (branch != null && !allCommit.containsKey(branch.getCommit())) {
+            System.out.println("Please pull downremote changes before pushing.");
+            return;
+        }
+        repo.acceptPush(allCommit, remoteBranch, Repository.getHead().getCommit());
+    }
+
     private static void errorOperands() {
         System.out.println("Incorrect operands.");
         System.exit(0);
@@ -627,6 +654,17 @@ public class Gitlet {
             String blobSha1 = Utils.sha1(Utils.serialize(blob));
             Repository.writeBlob(blob, blobSha1);
             stage.addFile(filename, blobSha1);
+        }
+    }
+
+    /** 获取该 commit 和其所有的父 commit */
+    private static void getAllCommit(Commit commit, HashMap<String, Commit> allCommit) {
+        allCommit.put(Utils.sha1(Utils.serialize(commit)), commit);
+        if (commit.getFirstParent() != null) {
+            getAllCommit(Repository.getCommit(commit.getFirstParent()), allCommit);
+        }
+        if (commit.getSecondParent() != null) {
+            getAllCommit(Repository.getCommit(commit.getSecondParent()), allCommit);
         }
     }
 }

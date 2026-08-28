@@ -73,8 +73,9 @@ CS61B-Gitlet/
 │   ├── Head.java       # 代表Head指针
 │   ├── Main.java       # 程序入口
 │   ├── Repository.java # 代表一个仓库,封装仓库操作
+│   ├── RemoteRepo.java # 代表一个远程仓库，封装相关操作
 │   ├── Stage.java      # 代表暂存区
-│   ├── Remote.java      # 代表远程仓库
+│   ├── Remote.java     # 代表远程仓库的相关信息
 │   └── Utils.java      # 工具类,封装一些 java 的文件操作
 ├── guidebook-cn/       # 使用 AI 翻译的中文指导书
 ├── testing/            # 测试用例
@@ -413,6 +414,56 @@ flowchart LR
 ```
 
 如果该分支不存在，则输出`A branch with that name does not exist.`，如果该分支就是当前分支，则输出`Cannot merge a branch with itself.`，如果合并会导致工作区中未跟踪文件被覆盖，则输出`There is an untracked file in the way; delete it, or add and commit it first.`
+
+### add-remote
+
+#### 使用方法
+
+```bash
+java gitlet.Main add-remote <remote name> <name of remote directory>/.gitlet
+```
+
+- `remote name`:远程仓库的名字
+- `name of remote directory`:远程仓库的所在目录
+
+#### 功能描述
+
+添加一个名字为 `remote name` 的远程仓库，该远程仓库所在目录为`name of remote directory`,该指令**不会**检查该远程仓库是否存在
+
+如果该名字的远程仓库已经添加，则输出 ` A remote with that name already exists.`
+
+### rm-remote
+
+#### 使用方法
+
+```bash
+java gitlet.Main rm-remote <remote name>
+```
+
+- `remote name`:要删除的远程仓库的名字
+
+#### 功能描述
+
+删除名字为 `remote name` 的远程仓库，如果该名字不存在，则输出 `A remote withthat name does not exist.`
+
+### push
+
+#### 使用方法
+
+```bash
+java gitlet.Main push <remote name> <remote branch name>
+```
+
+- `remote name`:要推送的远程仓库的名字
+- `remote branch name`:要推送的远程分支名字
+
+#### 功能描述
+
+将本地仓库的当前 commit 及其所有历史 commit 全部复制到远程仓库的指定分支下，并且会将远程仓库的 reset 到最新的 commit。
+
+如果远程仓库不存在该分支，则创建该分支，如果存在，要求该分支的头指针对应的 commit 在本地仓库当前 commit 的历史提交记录中，如果不满足，则输出 `Please pull downremote changes before pushing.`
+
+如果远程仓库的 `.gitlet` 不存在，则输出 `Remote directory not found.`
 
 ---
 
