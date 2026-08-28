@@ -2,6 +2,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,12 +26,9 @@ public class Repository {
     public static final File COMMITS_DIR = join(GITLET_DIR, "commits");
     public static final File BLOBS_DIR = join(GITLET_DIR, "blobs");
     public static final File BRANCHES_DIR = join(GITLET_DIR, "branches");
+    public static final File REMOTES_DIR = join(GITLET_DIR, "remotes");
     public static final File HEAD = join(GITLET_DIR, "head");
     public static final File STAGE = join(GITLET_DIR, "stage");
-
-    public Repository() {
-        // 待补充
-    }
 
     /** 创建并初始化 .gitlet 目录 */
     public static void dirInit() {
@@ -37,6 +36,7 @@ public class Repository {
         COMMITS_DIR.mkdir();
         BLOBS_DIR.mkdir();
         BRANCHES_DIR.mkdir();
+        REMOTES_DIR.mkdir();
         try {
             HEAD.createNewFile();
             STAGE.createNewFile();
@@ -139,6 +139,36 @@ public class Repository {
             }
         }
         writeObject(file, blob);
+    }
+
+    /** 获取指定的远程仓库 */
+    public static Remote getRemote(String remoteName) {
+        File file = join(REMOTES_DIR, remoteName);
+        if (!file.exists()) {
+            return null;
+        }
+        return readObject(file, Remote.class);
+    }
+
+    /** 写入远程仓库 */
+    public static void writeRemote(Remote remote) {
+        File file = join(REMOTES_DIR, remote.getName());
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        writeObject(file, remote);
+    }
+
+    /** 删除远程仓库 */
+    public static void deleteRemote(String remoteName) {
+        File file = join(REMOTES_DIR, remoteName);
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
     /** 判断给定blob是否与当前commit中的内容完全一样 */

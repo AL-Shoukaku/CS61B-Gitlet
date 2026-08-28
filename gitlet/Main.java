@@ -59,6 +59,12 @@ public class Main {
             case "merge":
                 Gitlet.merge(args);
                 break;
+            case "add-remote":
+                Gitlet.addRemote(args);
+                break;
+            case "rm-remote":
+                Gitlet.rmRemote(args);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

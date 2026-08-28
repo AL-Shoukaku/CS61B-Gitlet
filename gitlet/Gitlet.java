@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import static gitlet.Utils.join;
@@ -481,6 +482,33 @@ public class Gitlet {
             System.out.println("Encountered a merge conflict.");
         }
         doCommit(message, obranch.getCommit());
+    }
+
+    public static void addRemote(String[] args) {
+        if (args.length != 3) {
+            errorOperands();
+        }
+        String remoteName = args[1];
+        String remotePath = args[2];
+        List<String> remoteList = Utils.plainFilenamesIn(Repository.REMOTES_DIR);
+        if (remoteList.contains(remoteName)) {
+            System.out.println("A remote with that name already exists.");
+            return;
+        }
+        Remote remote = new Remote(remoteName, remotePath);
+        Repository.writeRemote(remote);
+    }
+
+    public static void rmRemote(String[] args) {
+        if (args.length != 2) {
+            errorOperands();
+        }
+        List<String> remoteList = Utils.plainFilenamesIn(Repository.REMOTES_DIR);
+        if (!remoteList.contains(args[1])) {
+            System.out.println("A remote withthat name does not exist.");
+            return;
+        }
+        Repository.deleteRemote(args[1]);
     }
 
     private static void errorOperands() {

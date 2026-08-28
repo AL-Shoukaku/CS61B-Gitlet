@@ -65,7 +65,7 @@ make clean
 
 ```
 CS61B-Gitlet/
-├── guide/
+├── gitlet/
 │   ├── Blob.java       # 代表一个文件的副本
 │   ├── Branch.java     # 代表一个分支
 │   ├── Commit.java     # 代表一个提交
@@ -74,6 +74,7 @@ CS61B-Gitlet/
 │   ├── Main.java       # 程序入口
 │   ├── Repository.java # 代表一个仓库,封装仓库操作
 │   ├── Stage.java      # 代表暂存区
+│   ├── Remote.java      # 代表远程仓库
 │   └── Utils.java      # 工具类,封装一些 java 的文件操作
 ├── guidebook-cn/       # 使用 AI 翻译的中文指导书
 ├── testing/            # 测试用例
@@ -88,6 +89,7 @@ CS61B-Gitlet/
 ├── blobs/     # 存储文件副本的目录
 ├── branches/  # 存储分支信息的目录
 ├── commits/   # 存储提交信息的目录
+├── remotes/   # 存储远程仓库信息的目录
 ├── heads      # 存储 Head 指针的文件
 └── stage      # 存储暂存区信息的文件
 ```
@@ -411,6 +413,32 @@ flowchart LR
 ```
 
 如果该分支不存在，则输出`A branch with that name does not exist.`，如果该分支就是当前分支，则输出`Cannot merge a branch with itself.`，如果合并会导致工作区中未跟踪文件被覆盖，则输出`There is an untracked file in the way; delete it, or add and commit it first.`
+
+---
+
+## 测试方法
+
+执行以下命令来运行官方提供的测试
+
+```bash
+make
+make check
+```
+
+正确的输出如下：
+
+```bash
+test01-init:
+OK
+test02-basic-checkout:
+OK
+test03-basic-log:
+OK
+test04-prev-checkout:
+OK
+
+Ran 4 tests. All passed.
+```
 
 ---
 
