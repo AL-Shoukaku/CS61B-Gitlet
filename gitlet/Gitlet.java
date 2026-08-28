@@ -6,11 +6,6 @@ import java.util.*;
 import static gitlet.Utils.join;
 
 public class Gitlet {
-    private Repository rep;
-
-    public Gitlet() {
-
-    }
 
     public static void init(String[] args) {
         if (args.length > 1) {
@@ -18,7 +13,7 @@ public class Gitlet {
         }
         if (Repository.GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in "
-                    + "thecurrent directory.");
+                    + "the current directory.");
             return;
         }
         Repository.dirInit();   // 初始化目录
@@ -39,7 +34,6 @@ public class Gitlet {
     }
 
     public static void add(String[] args) {
-        // 不处理文件的删除情况
         if (args.length != 2) {
             errorOperands();
         }
@@ -137,23 +131,7 @@ public class Gitlet {
         }
         Commit commit = Repository.getCurrentCommit();
         while (true) {
-            // 打印 ===
-            System.out.println("===");
-            // 打印 commit sha1
-            System.out.print("commit ");
-            System.out.println(Utils.sha1(Utils.serialize(commit)));
-            // 打印 merge
-            if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
-                String first = commit.getFirstParent().substring(0, 7);
-                String second = commit.getSecondParent().substring(0, 7);
-                System.out.println("Merge: " + first + " " + second);
-            }
-            // 打印 date
-            System.out.println(String.format(Locale.US,
-                    "Date: %1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
-                    commit.getDate()));
-            // 打印 message 和最后的空行
-            System.out.println(commit.getMessage() + "\n");
+            printCommitLog(commit);
             if (commit.getFirstParent() == null) {
                 break;
             }
@@ -168,18 +146,7 @@ public class Gitlet {
         List<String> nameList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
         for (String filename : nameList) {
             Commit commit = Repository.getCommit(filename);
-            System.out.println("===");
-            System.out.print("commit ");
-            System.out.println(Utils.sha1(Utils.serialize(commit)));
-            if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
-                String first = commit.getFirstParent().substring(0, 7);
-                String second = commit.getSecondParent().substring(0, 7);
-                System.out.println("Merge: " + first + " " + second);
-            }
-            System.out.println(String.format(Locale.US,
-                    "Date: %1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
-                    commit.getDate()));
-            System.out.println(commit.getMessage() + "\n");
+            printCommitLog(commit);
         }
     }
 
@@ -615,7 +582,6 @@ public class Gitlet {
         Blob curBlob = cur.getBlob(filename);
         Blob othBlob = oth.getBlob(filename);
         Blob splitBlob = split.getBlob(filename);
-
         // 两者都有则进一步判断，一方有且改动则表示冲突，否则不作为
         if (cur.hasFile(filename) && oth.hasFile(filename)) {
             // 若文件内容一样则不用变动，不一样则进入下一步判断
@@ -696,5 +662,26 @@ public class Gitlet {
         if (commit.getSecondParent() != null) {
             getAllCommit(Repository.getCommit(commit.getSecondParent()), allCommit);
         }
+    }
+
+    /** 打印一个 commit 的 log 信息 */
+    private static void printCommitLog(Commit commit) {
+        // 打印 ===
+        System.out.println("===");
+        // 打印 commit sha1
+        System.out.print("commit ");
+        System.out.println(Utils.sha1(Utils.serialize(commit)));
+        // 打印 merge
+        if (commit.getFirstParent() != null && commit.getSecondParent() != null) {
+            String first = commit.getFirstParent().substring(0, 7);
+            String second = commit.getSecondParent().substring(0, 7);
+            System.out.println("Merge: " + first + " " + second);
+        }
+        // 打印 date
+        System.out.println(String.format(Locale.US,
+                "Date: %1$ta %1$tb %1$td %1$tT %1$tY %1$tz",
+                commit.getDate()));
+        // 打印 message 和最后的空行
+        System.out.println(commit.getMessage() + "\n");
     }
 }

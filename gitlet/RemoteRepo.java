@@ -2,7 +2,6 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,11 +40,6 @@ public class RemoteRepo {
     /** 写头指针 */
     public void writeHead(Head head) {
         writeObject(HEAD, head);
-    }
-
-    /** 获取暂存区 */
-    public Stage getStage() {
-        return readObject(STAGE, Stage.class);
     }
 
     /** 写入暂存区 */
@@ -97,6 +91,11 @@ public class RemoteRepo {
     /** 写入 branch */
     public void writeBranch(Branch branch) {
         File file = join(BRANCHES_DIR, branch.getName());
+        // 应对分支名包含 `/` 的情况，创建对应的目录
+        File parent = file.getParentFile();
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -129,46 +128,6 @@ public class RemoteRepo {
         writeObject(file, blob);
     }
 
-    /** 获取指定的远程仓库 */
-    public Remote getRemote(String remoteName) {
-        File file = join(REMOTES_DIR, remoteName);
-        if (!file.exists()) {
-            return null;
-        }
-        return readObject(file, Remote.class);
-    }
-
-    /** 写入远程仓库 */
-    public void writeRemote(Remote remote) {
-        File file = join(REMOTES_DIR, remote.getName());
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        writeObject(file, remote);
-    }
-
-    /** 删除远程仓库 */
-    public void deleteRemote(String remoteName) {
-        File file = join(REMOTES_DIR, remoteName);
-        if (file.exists()) {
-            file.delete();
-        }
-    }
-
-    /** 判断给定blob是否与当前commit中的内容完全一样 */
-    public boolean blobEqualCurrentCommit(String filename, Blob blob) {
-        if (!getCurrentCommit().hasFile(filename)) {
-            return false;
-        }
-        byte[] b1 = blob.getFileContents();
-        byte[] b2 = getCurrentCommit().getBlob(filename).getFileContents();
-        return Arrays.equals(b1, b2);
-    }
-
     /** 拿到当前commit */
     public Commit getCurrentCommit() {
         return getCommit(getHead().getCommit());
@@ -198,14 +157,6 @@ public class RemoteRepo {
             }
         }
         Utils.writeContents(file, contents);
-    }
-
-    /** 删除指定分支 */
-    public void deleteBranch(String branchName) {
-        File file = join(BRANCHES_DIR, branchName);
-        if (file.exists()) {
-            file.delete();
-        }
     }
 
     /** 判断当前仓库是否有 .gitlet */
@@ -340,5 +291,4 @@ public class RemoteRepo {
             getAllCommit(getCommit(commit.getSecondParent()), allCommit);
         }
     }
-
 }

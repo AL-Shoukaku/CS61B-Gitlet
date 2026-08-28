@@ -3,8 +3,8 @@ package gitlet;
 import java.io.Serializable;
 
 public class Remote implements Serializable {
-    private String name;
-    private String path;
+    private final String name;
+    private final String path;
 
     public Remote(String name, String path) {
         this.name = name;

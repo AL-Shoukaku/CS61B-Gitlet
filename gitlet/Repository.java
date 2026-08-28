@@ -13,12 +13,6 @@ import static gitlet.Utils.*;
  *  @author AL-Shoukaku
  */
 public class Repository {
-    /**
-     * List all instance variables of the Repository class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided two examples for you.
-     */
-
     /** 仓库的基本目录与文件 */
     public static final File CWD = new File(System.getProperty("user.dir"));
     public static final File GITLET_DIR = join(CWD, ".gitlet");
@@ -234,34 +228,30 @@ public class Repository {
         return Utils.plainFilenamesIn(BLOBS_DIR).contains(sha1);
     }
 
-    /** 判断是否有这个 branch */
-    public static boolean hasBranch(String branchName) {
-        return (getBranch(branchName) != null);
-    }
-
     /** 获取所有分支的名字，能递归目录 */
     public static List<String> getAllBranchName() {
         List<String> result = new ArrayList<>();
         // 获取目录中的所有文件
         File[] files = join(BRANCHES_DIR).listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
-                getAllBranchNameRecursive(files[i].getName(), result);
+        for (File file : files) {
+            if (file.isDirectory()) {
+                getAllBranchNameRecursive(file.getName(), result);
             } else {
-                result.add(files[i].getName());
+                result.add(file.getName());
             }
         }
         return result;
     }
 
+    /** 获取目录里的所有分支，递归调用 */
     private static void getAllBranchNameRecursive(String dirName, List<String> result) {
         File dir = join(BRANCHES_DIR, dirName);
         File[] files = dir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
-                getAllBranchNameRecursive(dirName + "/" + files[i].getName(), result);
+        for (File file : files) {
+            if (file.isDirectory()) {
+                getAllBranchNameRecursive(dirName + "/" + file.getName(), result);
             } else {
-                result.add(dirName + "/" + files[i].getName());
+                result.add(dirName + "/" + file.getName());
             }
         }
     }

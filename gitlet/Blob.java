@@ -3,7 +3,7 @@ package gitlet;
 import java.io.Serializable;
 
 public class Blob implements Serializable {
-    private byte[] fileContents;
+    private final byte[] fileContents;
 
     public Blob(byte[] fileContents) {
         this.fileContents = fileContents;

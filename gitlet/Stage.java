@@ -9,8 +9,8 @@ import java.util.HashSet;
  * remove 文件的名字
  */
 public class Stage implements Serializable {
-    private HashMap<String, String> addFile;
-    private HashSet<String> removeFile;
+    private final HashMap<String, String> addFile;
+    private final HashSet<String> removeFile;
 
     public Stage() {
         this.addFile = new HashMap<>();

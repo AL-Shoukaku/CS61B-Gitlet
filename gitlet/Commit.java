@@ -8,19 +8,11 @@ import java.util.TreeMap;
  *  @author AL-Shoukaku
  */
 public class Commit implements Serializable {
-    /**
-     *
-     *
-     * List all instance variables of the Commit class here with a useful
-     * comment above them describing what that variable represents and how that
-     * variable is used. We've provided one example for `message`.
-     */
-
     /** The message of this Commit. */
     private final String message;
     private final String firstParent;
     private final String secondParent;
-    private TreeMap<String, String> blobs;  // <name, blob>
+    private final TreeMap<String, String> blobs;  // <name, blob>
     private final Date date;
 
     public Commit(String message, String first, String second, Date date) {
