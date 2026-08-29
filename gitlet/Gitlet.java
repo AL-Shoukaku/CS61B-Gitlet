@@ -386,11 +386,10 @@ public class Gitlet {
         }
         // 当前分支是分裂点，则移动到给定分支，复用 checkout 并设置好 head 和 cbranch
         if (commitEquals(curCommit, splitCommit)) {
-            checkoutBranch(obranch.getName());
-            cbranch.setCommit(obranch.getCommit());
-            head.setBranch(cbranch.getName());
-            Repository.writeHead(head);
-            Repository.writeBranch(cbranch);
+            String[] resetArgs = new String[2];
+            resetArgs[0] = "reset";
+            resetArgs[1] = obranch.getCommit();
+            reset(resetArgs);
             System.out.println("Current branch fast-forwarded.");
             return;
         }
