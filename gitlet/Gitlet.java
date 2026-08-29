@@ -8,9 +8,7 @@ import static gitlet.Utils.join;
 public class Gitlet {
 
     public static void init(String[] args) {
-        if (args.length > 1) {
-            errorOperands();
-        }
+        errorOperands(args, 1);
         if (Repository.GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in "
                     + "the current directory.");
@@ -34,9 +32,7 @@ public class Gitlet {
     }
 
     public static void add(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String name = args[1];
         File file = join(Repository.CWD, name);
         if (!file.exists()) {
@@ -64,9 +60,7 @@ public class Gitlet {
     }
 
     public static void commit(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         doCommit(args[1], null);
     }
 
@@ -103,9 +97,7 @@ public class Gitlet {
     }
 
     public static void rm(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String filename = args[1];
         Stage stage = Repository.getStage();
         // 如果被暂存了，则直接取消暂存
@@ -126,9 +118,7 @@ public class Gitlet {
     }
 
     public static void log(String[] args) {
-        if (args.length > 1) {
-            errorOperands();
-        }
+        errorOperands(args, 1);
         Commit commit = Repository.getCurrentCommit();
         while (true) {
             printCommitLog(commit);
@@ -140,9 +130,7 @@ public class Gitlet {
     }
 
     public static void globalLog(String[] args) {
-        if (args.length > 1) {
-            errorOperands();
-        }
+        errorOperands(args, 1);
         List<String> nameList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
         for (String filename : nameList) {
             Commit commit = Repository.getCommit(filename);
@@ -151,9 +139,7 @@ public class Gitlet {
     }
 
     public static void find(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String message = args[1];
         List<String> nameList = Utils.plainFilenamesIn(Repository.COMMITS_DIR);
         boolean hasCommit = false;
@@ -170,9 +156,7 @@ public class Gitlet {
     }
 
     public static void status(String[] args) {
-        if (args.length != 1) {
-            errorOperands();
-        }
+        errorOperands(args, 1);
         // 准备所需要的对象
         Head head = Repository.getHead();
         Stage stage = Repository.getStage();
@@ -254,7 +238,8 @@ public class Gitlet {
         } else if (args.length == 2) {
             checkoutBranch(args[1]);
         } else {
-            errorOperands();
+            System.out.println("Incorrect operands.");
+            System.exit(0);
         }
     }
 
@@ -315,9 +300,7 @@ public class Gitlet {
     }
 
     public static void branch(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String branchName = args[1];
         List<String> allBranch = Repository.getAllBranchName();
         if (allBranch.contains(branchName)) {
@@ -330,9 +313,7 @@ public class Gitlet {
     }
 
     public static void rmbranch(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String branchName = args[1];
         Branch branch = Repository.getBranch(branchName);
         if (branch == null) {
@@ -347,9 +328,7 @@ public class Gitlet {
     }
 
     public static void reset(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         String commitId = args[1];
         Commit newCommit = Repository.getCommit(commitId);
         Commit curCommit = Repository.getCurrentCommit();
@@ -381,9 +360,7 @@ public class Gitlet {
     }
 
     public static void merge(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         if (!Repository.getStage().isEmpty()) {
             System.out.println("You have uncommitted changes.");
             return;
@@ -451,9 +428,7 @@ public class Gitlet {
     }
 
     public static void addRemote(String[] args) {
-        if (args.length != 3) {
-            errorOperands();
-        }
+        errorOperands(args, 3);
         String remoteName = args[1];
         String remotePath = args[2];
         List<String> remoteList = Utils.plainFilenamesIn(Repository.REMOTES_DIR);
@@ -466,9 +441,7 @@ public class Gitlet {
     }
 
     public static void rmRemote(String[] args) {
-        if (args.length != 2) {
-            errorOperands();
-        }
+        errorOperands(args, 2);
         List<String> remoteList = Utils.plainFilenamesIn(Repository.REMOTES_DIR);
         if (!remoteList.contains(args[1])) {
             System.out.println("A remote withthat name does not exist.");
@@ -478,9 +451,7 @@ public class Gitlet {
     }
 
     public static void push(String[] args) {
-        if (args.length != 3) {
-            errorOperands();
-        }
+        errorOperands(args, 3);
         String remoteName = args[1];
         String remoteBranch = args[2];
         Remote remote = Repository.getRemote(remoteName);
@@ -504,15 +475,15 @@ public class Gitlet {
         repo.acceptPush(allCommit, remoteBranch, Repository.getHead().getCommit());
     }
 
-    private static void errorOperands() {
-        System.out.println("Incorrect operands.");
-        System.exit(0);
+    private static void errorOperands(String[] args, int n) {
+        if (args.length != n) {
+            System.out.println("Incorrect operands.");
+            System.exit(0);
+        }
     }
 
     public static void fetch(String[] args) {
-        if (args.length != 3) {
-            errorOperands();
-        }
+        errorOperands(args, 3);
         String remoteName = args[1];
         String remoteBranch = args[2];
         Remote remote = Repository.getRemote(remoteName);

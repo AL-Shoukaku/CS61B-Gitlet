@@ -91,7 +91,7 @@ CS61B-Gitlet/
 ├── branches/  # 存储分支信息的目录
 ├── commits/   # 存储提交信息的目录
 ├── remotes/   # 存储远程仓库信息的目录
-├── heads      # 存储 Head 指针的文件
+├── head       # 存储 Head 指针的文件
 └── stage      # 存储暂存区信息的文件
 ```
 
