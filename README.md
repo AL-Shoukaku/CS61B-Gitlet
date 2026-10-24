@@ -6,6 +6,8 @@
 
 Gitlet 是基于 Java 实现的**版本控制系统（Version Control System）**，其灵感来源于工业中使用的 Git。Gitlet 支持包括**版本控制、分支管理、远程仓库**等最基本的 Git 命令，实现了文件副本的本地持久化存储，能够很好地帮助开发者完成版本控制工作。
 
+详细实现思路再[我的技术博客](https://al-shoukaku.github.io/2026/10/24/CS61B-Project2-Gitlet/)
+
 ---
 
 ## 环境搭建
